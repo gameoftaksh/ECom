@@ -10,10 +10,12 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Product, Cart, CartItem
 from .serializers import ProductSerializer, CartSerializer, CartItemSerializer
+from django.shortcuts import get_object_or_404
 from .permissions import IsOwnerOrReadOnly, IsAdminOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.permissions import AllowAny
 
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
@@ -30,7 +32,11 @@ class CustomAuthToken(ObtainAuthToken):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdminUser]
+    
+    def get_permissions(self):
+        if self.action == 'create':
+            return [AllowAny()]
+        return [IsAdminUser()]
 
 class AddressViewSet(viewsets.ModelViewSet):
     serializer_class = AddressSerializer
@@ -43,7 +49,7 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
-class ProductViewSet(viewsets.ReadOnlyModelViewSet):
+class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAdminOrReadOnly]
@@ -51,25 +57,6 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ['category', 'price']
     search_fields = ['name', 'description']
     ordering_fields = ['price', 'name']
-
-    @action(detail=True, methods=['post'])
-    def add_to_cart(self, request, pk=None):
-        product = self.get_object()
-        user = request.user
-        cart, created = Cart.objects.get_or_create(user=user)
-        
-        quantity = int(request.data.get('quantity', 1))
-        
-        cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
-        if not created:
-            cart_item.quantity += quantity
-            cart_item.save()
-        else:
-            cart_item.quantity = quantity
-            cart_item.save()
-        
-        serializer = CartItemSerializer(cart_item)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
@@ -124,16 +111,13 @@ class CartViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Cart.objects.filter(user=self.request.user)
 
-    @action(detail=True, methods=['post'])
-    def add_item(self, request, pk=None):
-        cart = self.get_object()
+    @action(detail=False, methods=['post'])
+    def add_item(self, request):
+        cart, _ = Cart.objects.get_or_create(user=request.user)
         product_id = request.data.get('product_id')
         quantity = int(request.data.get('quantity', 1))
         
-        try:
-            product = Product.objects.get(id=product_id)
-        except Product.DoesNotExist:
-            return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+        product = get_object_or_404(Product, id=product_id)
         
         cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
         if not created:
@@ -144,33 +128,6 @@ class CartViewSet(viewsets.ModelViewSet):
         
         serializer = CartItemSerializer(cart_item)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    @action(detail=True, methods=['post'])
-    def remove_item(self, request, pk=None):
-        cart = self.get_object()
-        product_id = request.data.get('product_id')
-        
-        try:
-            cart_item = CartItem.objects.get(cart=cart, product_id=product_id)
-            cart_item.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except CartItem.DoesNotExist:
-            return Response({'error': 'Item not found in cart'}, status=status.HTTP_404_NOT_FOUND)
-
-    @action(detail=True, methods=['post'])
-    def update_item_quantity(self, request, pk=None):
-        cart = self.get_object()
-        product_id = request.data.get('product_id')
-        quantity = int(request.data.get('quantity', 1))
-        
-        try:
-            cart_item = CartItem.objects.get(cart=cart, product_id=product_id)
-            cart_item.quantity = quantity
-            cart_item.save()
-            serializer = CartItemSerializer(cart_item)
-            return Response(serializer.data)
-        except CartItem.DoesNotExist:
-            return Response({'error': 'Item not found in cart'}, status=status.HTTP_404_NOT_FOUND)
 
 class CouponViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Coupon.objects.all()

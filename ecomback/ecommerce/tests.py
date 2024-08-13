@@ -97,6 +97,8 @@ class EcommerceAPITestCase(TestCase):
         data = {'product_id': self.product.id, 'quantity': 2}
         response = self.client.post('/api/carts/add_item/', data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(CartItem.objects.count(), 1)
+        self.assertEqual(CartItem.objects.first().quantity, 2)
 
     def test_create_order_from_cart(self):
         self.client.force_authenticate(user=self.user)
