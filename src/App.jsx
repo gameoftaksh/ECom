@@ -22,7 +22,7 @@ function App() {
               <Route path="/checkout" element={<Checkout />} />
             </Routes>
           </main>
-          <Footer />
+          <Footer/>
         </div>
       </Router>
     </CartProvider>

@@ -1,63 +1,62 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { useCart } from '../contexts/CartContext';
-import Button from '../components/atoms/Button';
-import { getProduct, getProductReviews } from '../utils/api';
+// import React from 'react';
+// import ProductList from '../components/organisms/ProductList';
 
-const ProductDetails = () => {
-  const { id } = useParams();
-  const [product, setProduct] = useState(null);
-  const [reviews, setReviews] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+// const Home = () => {
+//   // This is mock data. In a real application, you'd fetch this from an API
+//   const mockProducts = [
+//     { id: 1, name: 'Product 1', price: 19.99, image: 'https://via.placeholder.com/150' },
+//     { id: 2, name: 'Product 2', price: 29.99, image: 'https://via.placeholder.com/150' },
+//     { id: 3, name: 'Product 3', price: 39.99, image: 'https://via.placeholder.com/150' },
+//     { id: 4, name: 'Product 4', price: 49.99, image: 'https://via.placeholder.com/150' },
+//   ];
+
+//   return (
+//     <div className="container mx-auto px-4 py-8">
+//       <h1 className="text-3xl font-bold mb-6">Welcome to Our Store</h1>
+//       <ProductList products={mockProducts} />
+//     </div>
+//   );
+// };
+
+// export default Home;
+
+import React, { useState, useEffect } from 'react';
+import ProductList from '../components/organisms/ProductList';
+import { getProducts } from '../utils/api'; 
+
+  
+const Home = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { addItemToCart } = useCart();
 
   useEffect(() => {
-    const loadProductAndReviews = async () => {
+    const fetchProducts = async () => {
       try {
-        const [productResponse, reviewsResponse] = await Promise.all([
-          getProduct(id),
-          getProductReviews(id)
-        ]);
-        setProduct(productResponse.data);
-        setReviews(reviewsResponse.data);
-        setIsLoading(false);
+        const response = await getProducts(); // Fetch products from API
+        console.log(response.data.results);
+        setProducts(response.data.results); // Assuming response.data contains the array of products
+        setLoading(false);
       } catch (err) {
-        setError('Failed to fetch product details. Please try again later.');
-        setIsLoading(false);
+        setError('Failed to load products');
+        setLoading(false);
       }
     };
+    fetchProducts();
+  }, []);
 
-    loadProductAndReviews();
-  }, [id]);
-
-  if (isLoading) {
-    return <div className="container mx-auto px-4 py-8">Loading...</div>;
+  if (loading) {
+    return <div>Loading...</div>;
   }
 
   if (error) {
-    return <div className="container mx-auto px-4 py-8 text-red-500">{error}</div>;
+    return <div>{error}</div>;
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Welcome to Our Store</h1>
-      <ProductList 
-        products={products}
-        renderProduct={(product) => (
-          <div key={product.id} className="border rounded-lg overflow-hidden shadow-lg p-4">
-            <img src={product.image} alt={product.title} className="w-full h-48 object-cover mb-4" />
-            <h3 className="text-lg font-semibold mb-2">{product.title}</h3>
-            <p className="text-gray-600 mb-4">${product.price.toFixed(2)}</p>
-            <div className="flex justify-between items-center">
-              <Link to={`/product/${product.id}`}>
-                <Button variant="secondary">View Details</Button>
-              </Link>
-              <Button onClick={() => addToCart(product)}>Add to Cart</Button>
-            </div>
-          </div>
-        )}
-      />
+    <div>
+      <h1 className='bg-red-600 hover:bg-yellow-700 text-white text-center focus:ring-blue-500 height-20'>Welcome to Our Store</h1>
+      <ProductList products={products} /> {/* Pass products to ProductList component */}
     </div>
   );
 };

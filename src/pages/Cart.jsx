@@ -1,60 +1,46 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import Button from '../components/atoms/Button';
+import ProductCard from '../components/molecules/ProductCard';
+import { useNavigate } from 'react-router-dom';
 
 const Cart = () => {
-  const { cartItems, removeFromCart, updateQuantity, getCartTotal } = useCart();
+  const { cartItems, removeFromCart, updateQuantity } = useCart();
+  const navigate = useNavigate();
 
   if (cartItems.length === 0) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Your Cart</h1>
-        <p>Your cart is empty.</p>
-        <Link to="/" className="text-blue-600 hover:text-blue-800">
-          Continue Shopping
-        </Link>
-      </div>
-    );
+    return <div className="container mx-auto px-4 py-4">Your cart is empty.</div>;
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Your Cart</h1>
-      {cartItems.map((item) => (
-        <div key={item.id} className="flex items-center justify-between border-b py-4">
-          <div className="flex items-center">
-            <img src={item.image} alt={item.title} className="w-16 h-16 object-cover mr-4" />
-            <div>
-              <h3 className="text-lg font-semibold">{item.title}</h3>
-              <p>${item.price.toFixed(2)}</p>
+    <div className="container mx-auto px-4 py-4">
+      <h2 className="text-2xl font-bold mb-4">Your Cart</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {cartItems.map(item => (
+          <div key={item.id} className="relative">
+            <ProductCard product={item} />
+            <div className="absolute top-0 right-0 p-2">
+              <Button variant="secondary" onClick={() => removeFromCart(item.id)}>Remove</Button>
+            </div>
+            <div className="mt-2">
+              <label htmlFor={`quantity-${item.id}`} className="block text-sm font-medium">
+                Quantity
+              </label>
+              <input 
+                type="number" 
+                id={`quantity-${item.id}`} 
+                value={item.quantity} 
+                onChange={(e) => updateQuantity(item.id, parseInt(e.target.value, 10))}
+                className="border rounded w-16 px-2 mt-1"
+              />
             </div>
           </div>
-          <div className="flex items-center">
-            <button
-              onClick={() => updateQuantity(item.id, item.quantity - 1)}
-              className="px-2 py-1 bg-gray-200 rounded"
-            >
-              -
-            </button>
-            <span className="mx-2">{item.quantity}</span>
-            <button
-              onClick={() => updateQuantity(item.id, item.quantity + 1)}
-              className="px-2 py-1 bg-gray-200 rounded"
-            >
-              +
-            </button>
-            <Button onClick={() => removeFromCart(item.id)} variant="secondary" className="ml-4">
-              Remove
-            </Button>
-          </div>
-        </div>
-      ))}
-      <div className="mt-8">
-        <p className="text-xl font-bold">Total: ${getCartTotal().toFixed(2)}</p>
-        <Link to="/checkout">
-          <Button className="mt-4">Proceed to Checkout</Button>
-        </Link>
+        ))}
+      </div>
+      <div className="mt-6">
+      <Button variant="primary" onClick={() => navigate('/checkout')}>
+        Checkout
+      </Button>
       </div>
     </div>
   );

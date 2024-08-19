@@ -1,54 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useCart } from '../contexts/CartContext';
+import { getProduct } from '../utils/api';
 import Button from '../components/atoms/Button';
-import { fetchProductById } from '../utils/api';
+import ErrorMessage from '../components/atoms/ErrorMessage';
+import LoadingSpinner from '../components/atoms/LoadingSpinner';
 
 const ProductDetails = () => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { addToCart } = useCart();
 
   useEffect(() => {
-    const loadProduct = async () => {
+    const fetchProduct = async () => {
       try {
-        const data = await fetchProductById(id);
-        setProduct(data);
-        setIsLoading(false);
+        setLoading(true);
+        const response = await getProduct(id);
+        setProduct(response.data);
       } catch (err) {
         setError('Failed to fetch product details. Please try again later.');
-        setIsLoading(false);
+      } finally {
+        setLoading(false);
       }
     };
 
-    loadProduct();
+    fetchProduct();
   }, [id]);
 
-  if (isLoading) {
-    return <div className="container mx-auto px-4 py-8">Loading...</div>;
-  }
-
-  if (error) {
-    return <div className="container mx-auto px-4 py-8 text-red-500">{error}</div>;
-  }
-
-  if (!product) {
-    return <div className="container mx-auto px-4 py-8">Product not found.</div>;
-  }
+  if (loading) return <LoadingSpinner />;
+  if (error) return <ErrorMessage message={error} />;
+  if (!product) return <ErrorMessage message="Product not found" />;
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-wrap">
-        <div className="w-full md:w-1/2 pr-4 mb-4 md:mb-0">
-          <img src={product.image} alt={product.title} className="w-full h-auto" />
+      <div className="flex flex-col md:flex-row">
+        <div className="md:w-1/2">
+          <img src={product.image} alt={product.name} className="w-full h-auto object-cover" />
         </div>
-        <div className="w-full md:w-1/2 pl-4">
-          <h1 className="text-3xl font-bold mb-4">{product.title}</h1>
-          <p className="text-xl mb-4">${product.price.toFixed(2)}</p>
+        <div className="md:w-1/2 md:pl-8 mt-4 md:mt-0">
+          <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
+          {/* <p className="text-xl text-gray-600 mb-4">${product.price.toFixed(2)}</p> */}
           <p className="mb-4">{product.description}</p>
-          <Button onClick={() => addToCart(product)}>Add to Cart</Button>
+          <Button>Add to Cart</Button>
         </div>
       </div>
     </div>
