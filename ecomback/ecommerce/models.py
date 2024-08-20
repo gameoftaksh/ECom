@@ -1,10 +1,23 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.conf import settings
+from rolepermissions.roles import get_user_roles
+import uuid
+
+class APIKey(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    key = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
 
 class User(AbstractUser):
     phone_number = models.CharField(max_length=20, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    role = models.CharField(max_length=20, default='guest_user')
+
+    def get_role(self):
+        return get_user_roles(self)[0] if get_user_roles(self) else None
 
 class Address(models.Model):
     ADDRESS_TYPES = (

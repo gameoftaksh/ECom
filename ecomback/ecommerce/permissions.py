@@ -1,13 +1,9 @@
 from rest_framework import permissions
+from rolepermissions.checkers import has_permission
 
-class IsOwnerOrReadOnly(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return obj.user == request.user
-
-class IsAdminOrReadOnly(permissions.BasePermission):
+class HasRolePermission(permissions.BasePermission):
     def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return request.user and request.user.is_staff
+        required_permission = getattr(view, 'required_permission', None)
+        if required_permission:
+            return has_permission(request.user, required_permission)
+        return True

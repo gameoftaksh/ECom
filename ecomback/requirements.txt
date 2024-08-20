@@ -1,2 +1,12 @@
 Django==5.0.7
+django_role_permissions==3.2.0
 djangorestframework==3.15.2
+Faker==27.0.0
+python-dotenv==1.0.1
+cryptography==43.0.0
+dj-rest-auth==6.0.0
+django-allauth==64.1.0
+django-cors-headers==4.4.0
+django-debug-toolbar==4.4.6
+django-filter==24.3
+psycopg==3.2.1
