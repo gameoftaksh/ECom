@@ -7,6 +7,17 @@ from rest_framework.authtoken.models import Token
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client
+from dj_rest_auth.registration.views import SocialLoginView
+from dotenv import load_dotenv
+load_dotenv()
+import os
+
+class GoogleLogin(SocialLoginView):
+    adapter_class = GoogleOAuth2Adapter
+    callback_url = os.getenv('CALLBACK_URL_GOOGLE')
+    client_class = OAuth2Client
 
 from .models import (
     User, Address, Category, Product, Order, Payment, 

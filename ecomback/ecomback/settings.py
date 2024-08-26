@@ -30,6 +30,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "*"]
 
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_WHITELIST = ('http://localhost:8000',)
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ORIGIN_ALLOW_ALL = True
 
 # Application definition
 
@@ -54,6 +58,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
 ]
 
 ROOT_URLCONF = 'ecomback.urls'
@@ -152,6 +157,7 @@ REST_FRAMEWORK = {
 ROLEPERMISSIONS_MODULE = 'ecommerce.roles'
 
 INSTALLED_APPS += [
+    'ecommerce',
     'corsheaders',
     'rest_framework.authtoken',
     'dj_rest_auth',
@@ -163,6 +169,7 @@ INSTALLED_APPS += [
     'allauth.socialaccount.providers.discord',
     'rolepermissions',
     'django_filters',
-    'ecommerce',
     'rest_framework',
+    'rest_auth',
+    'dj_rest_auth.registration',
    ]

@@ -16,8 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from ecommerce.views import GoogleLogin 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('ecommerce.urls')),
+    path('dj-rest-auth/google/', GoogleLogin.as_view(),name='google_login'),
 ]
