@@ -1,23 +1,47 @@
-from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
 from rolepermissions.roles import get_user_roles
 import uuid
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.utils.translation import gettext_lazy as _
+from .managers import CustomUserManager
+
+class User(AbstractBaseUser, PermissionsMixin):
+    email = models.EmailField(_("Email Address"), unique=True, max_length=255)
+    first_name = models.CharField(_("First Name"), max_length=100)
+    last_name = models.CharField(_("Last Name"), max_length=100, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    date_joined = models.DateTimeField(auto_now_add=True)
+    last_login = models.DateTimeField(auto_now=True)
+    role = models.CharField(max_length=20, default='guest_user')
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ['first_name']
+
+    objects = CustomUserManager()
+
+    class Meta:
+        verbose_name = _("User")
+        verbose_name_plural = _("Users")
+
+    def __str__(self):
+        return self.email
+
+    def get_role(self):
+        return get_user_roles(self)[0] if get_user_roles(self) else None
+
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}".strip()
+
+    def get_short_name(self):
+        return self.first_name
 
 class APIKey(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     key = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
-
-class User(AbstractUser):
-    phone_number = models.CharField(max_length=20, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    role = models.CharField(max_length=20, default='guest_user')
-
-    def get_role(self):
-        return get_user_roles(self)[0] if get_user_roles(self) else None
 
 class Address(models.Model):
     ADDRESS_TYPES = (

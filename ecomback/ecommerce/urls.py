@@ -1,7 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
-from .views import CustomAuthToken
+from .views import CustomAuthToken, GoogleLogin
+from django.shortcuts import redirect
 
 router = DefaultRouter()
 router.register(r'users', views.UserViewSet)
@@ -14,15 +15,19 @@ router.register(r'reviews', views.ReviewViewSet)
 router.register(r'carts', views.CartViewSet, basename='cart')
 router.register(r'coupons', views.CouponViewSet)
 
+def email_confirmation(request, key):
+    return redirect(f"http://localhost:8000/auth/registration/account-confirm-email/{key}")
+
+def reset_password_confirm(request, uid, token):
+    return redirect(f"http://localhost:8000/reset/password/confirm/{uid}/{token}")
+
 urlpatterns = [
     path('', include(router.urls)),
-    path('auth/token/', CustomAuthToken.as_view(), name='api_token_auth'),
-    
-    # dj-rest-auth URLs
+    # dj-rest-auth
     path('auth/', include('dj_rest_auth.urls')),
     path('auth/registration/', include('dj_rest_auth.registration.urls')),
-    
-    # Social authentication URLs
-    path('auth/google/', include('allauth.socialaccount.providers.google.urls')),
-    path('auth/discord/', include('allauth.socialaccount.providers.discord.urls')),
+    path('auth/google/', GoogleLogin.as_view(), name='google_login'),
+    path('auth/registration/account-confirm-email/<str:key>/', email_confirmation),
+    path('reset/password/confirm/<int:uid>/<str:token>', reset_password_confirm, name="password_reset_confirm"),
+    path('auth/token/', CustomAuthToken.as_view(), name='api_token_auth'),
 ]

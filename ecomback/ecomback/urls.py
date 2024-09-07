@@ -16,10 +16,22 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from ecommerce.views import GoogleLogin 
+#from ecommerce.views import GoogleLogin 
+#from django.shortcuts import render, redirect
+
+#def email_confirmation(request, key):
+#    return redirect(f"http://localhost:8000/dj-rest-auth/registration/account-confirm-email/{key}")
+#
+#def reset_password_confirm(request, uid, token):
+#    return redirect(f"http://localhost:8000/reset/password/confirm/{uid}/{token}")
 
 urlpatterns = [
+    path('admin/doc/', include('django.contrib.admindocs.urls')),
     path('admin/', admin.site.urls),
     path('api/', include('ecommerce.urls')),
-    path('dj-rest-auth/google/', GoogleLogin.as_view(),name='google_login'),
+   # path('dj-rest-auth/', include('dj_rest_auth.urls')),
+   # path('dj-rest-auth/registration/account-confirm-email/<str:key>/', email_confirmation),
+   # path('dj-rest-auth/registration/', include('dj_rest_auth.registration.urls')),
+   # path('reset/password/confirm/<int:uid>/<str:token>', reset_password_confirm, name="password_reset_confirm"),
+   # path('dj-rest-auth/google/', GoogleLogin.as_view(),name='google_login'),
 ]

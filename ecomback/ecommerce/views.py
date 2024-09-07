@@ -11,8 +11,10 @@ from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
 from dotenv import load_dotenv
-load_dotenv()
 import os
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR/".env")
 
 class GoogleLogin(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
