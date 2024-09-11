@@ -4,7 +4,7 @@ import { useState } from "react";
 import { connect } from "react-redux";
 import { emailVerification } from "../reducer/Actions";
 
-const EmailVarification =()=>{
+const EmailVerification =({emailVerification})=>{
     const [ status, setStatus ] = useState (false);
     const { key } = useParams();
     const handlingSubmit = (e) => {

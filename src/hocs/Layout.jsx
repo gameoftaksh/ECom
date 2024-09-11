@@ -1,4 +1,3 @@
-import { useLocation } from "react-router-dom";
 import Navbar from "../components/organisms/Navbar";
 import Alert from "../components/organisms/Alert";
 import { connect } from "react-redux";
@@ -13,11 +12,13 @@ const Layout = (props) => {
   useEffect (() => {
     const values = queryString.parse(location.search);
     const code = values.code;
+    
     if ( code ) {
         props.googleLogin( code );
     } else {
         props.verify();
         props.getUser();
+        console.log("user data is stored in redux store");
     }
   }, [location]);
   

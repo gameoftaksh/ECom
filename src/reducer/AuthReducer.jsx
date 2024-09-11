@@ -7,35 +7,31 @@ const initialState = {
     user : null,
     message : "",
 }
-
+console.log(localStorage.getItem('refresh'));
 const AuthReducer = (state=initialState, action) =>{
     const {type, payload} = action;
     switch (type)
     {
         case TYPE.LOGIN_SUCCESS:
             localStorage.setItem('access', payload.access);
-            localStorage.setItem('refresh', payload.refresh);
+            console.log("tokens stored in local storage")
             return {
                 ...state,
-                access : payload.access,
-                refresh : payload.refresh,
-                isAuthenticated : true,
-                user : payload.user,
-                message : "login has successed"
+                access: payload.access,
+                isAuthenticated: true,
+                user: payload.user,
+                message: "Login has successed"
+            }
+        case TYPE.LOGIN_FAIL:
+            localStorage.removeItem('access');
+            return {
+                ...state,
+                access: null,
+                isAuthenticated: false,
+                user: null,
+                message: "Login has failed"
             }
 
-        case TYPE.LOGIN_FAIL:
-            localStorage.removeItem('access', payload.access);
-            localStorage.removeItem('refresh', payload.refresh);
-            return {
-                ...state,
-                access : payload.access,
-                refresh : payload.refresh,
-                isAuthenticated : false,
-                user : null,
-                message : "login has failed"
-            }
-    
         case TYPE.VERIFY_SUCCESS:
             return {
                 ...state,
