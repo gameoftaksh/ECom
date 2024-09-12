@@ -15,7 +15,6 @@ class LoggedInUser(AbstractUserRole):
         'write_review': True,
         'manage_addresses': True,
         'view_coupons': True,
-        'manage_products': False,
     }
 
 class VendorAdmin(AbstractUserRole):

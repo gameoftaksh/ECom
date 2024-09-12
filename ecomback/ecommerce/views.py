@@ -10,17 +10,20 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
+from dj_rest_auth.registration.views import RegisterView
+from .services import create_user_with_role
 from dotenv import load_dotenv
+from dj_rest_auth.registration.views import RegisterView
+from .serializers import CustomRegisterSerializer
 import os
+from .roles import GuestUser, LoggedInUser, VendorAdmin, SuperAdmin
 from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR/".env")
 
-class GoogleLogin(SocialLoginView):
-    adapter_class = GoogleOAuth2Adapter
-    callback_url = os.getenv('CALLBACK_URL_GOOGLE')
-    client_class = OAuth2Client
-
+from rolepermissions.roles import assign_role, clear_roles
+from .permissions import HasRolePermission
+from rolepermissions.checkers import has_permission
 from .models import (
     User, Address, Category, Product, Order, Payment, 
     Review, Cart, Coupon, OrderItem, CartItem
@@ -29,10 +32,25 @@ from .serializers import (
     UserSerializer, AddressSerializer, CategorySerializer, 
     ProductSerializer, OrderSerializer, PaymentSerializer, 
     ReviewSerializer, CartSerializer, CouponSerializer,
-    CartItemSerializer
+    CartItemSerializer, RoleSerializer
 )
-from .permissions import HasRolePermission
-from rolepermissions.checkers import has_permission
+
+class GoogleLogin(SocialLoginView):
+    adapter_class = GoogleOAuth2Adapter
+    callback_url = os.getenv('CALLBACK_URL_GOOGLE')
+    client_class = OAuth2Client
+
+class CustomRegisterView(RegisterView):
+    serializer_class = CustomRegisterSerializer
+
+    def perform_create(self, serializer):
+        user = create_user_with_role(
+            email=serializer.validated_data['email'],
+            first_name=serializer.validated_data['first_name'],
+            password=serializer.validated_data['password1'],
+            role='loggedin-user'  # This should match a key in the role_map in create_user_with_role
+        )
+        return user
 
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
@@ -47,6 +65,55 @@ class CustomAuthToken(ObtainAuthToken):
             'role': user.get_role().__name__ if user.get_role() else None
         })
 
+class RoleViewSet(viewsets.ViewSet):
+    def list(self, request):
+        user = request.user
+        role = user.get_role()
+
+        if role:
+            serializer = RoleSerializer(role)
+            return Response(serializer.data)
+        else:
+            return Response({"message": "No role assigned"})
+
+    @action(detail=False, methods=['put'])
+    def update(self, request):
+        user = request.user
+        new_role = request.data.get('role')
+        print(new_role) 
+       # if not user.has_perm('can_change_own_role'):
+       #     return Response({"message": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+        
+        user.role = new_role
+        user.save()
+        return Response({"message": "Role updated successfully"})
+
+
+#class RoleViewSet(viewsets.ViewSet):
+#    @action(detail=False, methods=['put'])
+#    def update(self, request):
+#        user = request.user
+#        new_role = request.data.get('role')
+#        
+#        if new_role not in dict(User.ROLE_CHOICES):
+#            return Response({"message": "Invalid role"}, status=status.HTTP_400_BAD_REQUEST)
+#
+#        role_map = {
+#            'guest-user': GuestUser,
+#            'loggedin-user': LoggedInUser,
+#            'vendor-admin': VendorAdmin,
+#            'super-admin': SuperAdmin
+#        }
+#        
+#        role_class = role_map.get(new_role)
+#        print(role_class)
+#        clear_roles(user)
+#        print(user,)
+#        assign_role(user, role_class)
+#        user.role = role_class 
+#        user.save()
+#        return Response({"message": "Role updated successfully"})
+#
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -75,7 +142,6 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = [HasRolePermission]
     required_permission = 'view_products'
 
     def get_permissions(self):

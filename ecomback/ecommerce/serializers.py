@@ -1,16 +1,28 @@
 from rest_framework import serializers
 from .models import User, Address, Category, Product, Order, OrderItem, Payment, Review, Cart, CartItem, Coupon
+from dj_rest_auth.registration.serializers import RegisterSerializer
+
+class CustomRegisterSerializer(RegisterSerializer):
+    first_name = serializers.CharField(required=True)
+
+    def get_cleaned_data(self):
+        data = super().get_cleaned_data()
+        data['first_name'] = self.validated_data.get('first_name', '')
+        return data
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'first_name', 'last_name', 'phone_number')
+        fields = ('id', 'email', 'first_name', 'last_name')
         extra_kwargs = {'password': {'write_only': True}}
 
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['role']
+
+    def to_representation(self, instance):
+        return {"role": instance}
 
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:

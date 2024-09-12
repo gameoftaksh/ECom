@@ -5,6 +5,7 @@ import uuid
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.utils.translation import gettext_lazy as _
 from .managers import CustomUserManager
+from .roles import GuestUser, LoggedInUser, VendorAdmin, SuperAdmin
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_("Email Address"), unique=True, max_length=255)
@@ -14,7 +15,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
-    role = models.CharField(max_length=20, default='guest_user')
+    ROLE_CHOICES = [
+        ('guest-user', 'GuestUser'),
+        ('loggedin-user', 'LoggedInUser'),
+        ('vendor-admin', 'VendorAdmin'),
+        ('super-admin', 'SuperAdmin'),
+    ]
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='guest-user')
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ['first_name']
@@ -29,7 +36,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     def get_role(self):
-        return get_user_roles(self)[0] if get_user_roles(self) else None
+        return self.role if self.role else 'No role assigned'
 
     def get_full_name(self):
         return f"{self.first_name} {self.last_name}".strip()
@@ -70,6 +77,10 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='products')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    image_url = models.URLField(max_length=1000, blank=True, null=True)  # New field for image URL
+
+    def __str__(self):
+        return self.name
 
 class Order(models.Model):
     ORDER_STATUS_CHOICES = [

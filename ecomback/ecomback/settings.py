@@ -28,6 +28,8 @@ DEBUG = os.getenv("DEBUG")
 
 ALLOWED_HOSTS = []
 
+UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -63,8 +65,9 @@ INSTALLED_APPS = [
 
 
 MIDDLEWARE = [
+    #'ecommerce.middleware.RoleMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'allauth.account.middleware.AccountMiddleware',
+  #  'allauth.account.middleware.AccountMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -179,7 +182,7 @@ REST_FRAMEWORK = {
 # simple jwt
 from datetime import timedelta
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(hours=2),
 }
 
@@ -191,6 +194,7 @@ REST_AUTH = {
     'JWT_AUTH_HTTPONLY': True,
     'SESSION_LOGIN': False,
     'OLD_PASSWORD_FIELD_ENABLED': True,
+    'REGISTER_SERIALIZER': 'ecommerce.serializers.CustomRegisterSerializer',
 }
 
 # cors headers
